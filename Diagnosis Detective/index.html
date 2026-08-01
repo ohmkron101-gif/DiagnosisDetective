@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Winter Clinic Diagnosis</title>
+    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="game-container">
+        <canvas id="gameCanvas"></canvas>
+
+        <div id="title-screen" class="overlay-screen">
+            <div style="display:flex; flex-direction:column; gap:15px; align-items:center;">
+                <button id="btn-start-game" class="btn-start-style pulse-button">START GAME</button>
+                <button id="btn-show-achievements" class="btn-start-style" style="font-size: 2rem; padding: 10px 30px; background: #fff9c4; color: #e65100; border-color: #fbc02d;">
+                    🏆 ACHIEVEMENTS
+                </button>
+            </div>
+            
+            <button id="btn-how-to-play" class="fixed-help-btn">❓ HOW TO PLAY</button>
+            <button id="btn-med-refs" class="fixed-refs-btn">📚 REFERENCES</button>
+        </div>
+
+        <div id="tutorial-modal" class="modal hidden" style="z-index: 100;">
+            <div class="intro-paper" style="width: 550px; text-align: center;">
+                <h2 id="tut-title" style="margin-top: 0; color: #2e7d32;">TUTORIAL</h2>
+                <div class="pixel-divider"></div>
+                <div style="margin: 15px 0; height: 220px; display: flex; justify-content: center; align-items: center; background: #222; border: 4px solid #5d4037; border-radius: 8px; overflow: hidden; box-shadow: inset 0 0 10px #000;">
+                    <img id="tut-image" src="" alt="Tutorial Image" style="max-width: 100%; max-height: 100%; object-fit: contain; image-rendering: pixelated; display: none;">
+                </div>
+                <div style="min-height: 80px; display: flex; align-items: center; justify-content: center;">
+                    <p id="tut-text" style="font-size: 1.6rem; text-align: left; line-height: 1.5; color: #3e2723; margin: 0;"></p>
+                </div>
+                <div class="pixel-divider"></div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px;">
+                    <button id="btn-tut-skip" class="btn-start-style" style="font-size: 1.4rem; padding: 8px 15px; background: #eee; color: #555; border-color: #999; box-shadow: 0 4px 0 #666;">
+                        <span id="ui-tut-skip">SKIP</span>
+                    </button>
+                    <div id="tut-dots" style="display: flex; gap: 5px;"></div>
+                    <button id="btn-tut-next" class="btn-green" style="font-size: 1.4rem; padding: 8px 20px;">
+                        <span id="ui-tut-next">NEXT ></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="lang-select-modal" class="modal hidden" style="z-index: 25;">
+            <div class="intro-paper" style="width: 380px; padding: 25px 20px; border-radius: 12px;">
+                <h2 style="margin:0; font-size: 2.2rem; color: #3e2723; letter-spacing: 1px;">SELECT LANGUAGE</h2>
+                <div style="font-size:1.3rem; color: #795548; margin-top: 5px;">เลือกภาษาที่ต้องการเล่น</div>
+                <div class="pixel-divider" style="margin: 20px 0;"></div>
+                <div style="display:flex; justify-content:center; gap:15px;">
+                    <button id="btn-choose-th" class="lang-choice-btn">🇹🇭 ภาษาไทย</button>
+                    <button id="btn-choose-en" class="lang-choice-btn">🇬🇧 English</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="achievements-modal" class="modal hidden" style="z-index: 30;">
+            <div class="intro-paper" style="width: 500px; text-align: left;">
+                <h2 style="text-align:center; color:#e65100; margin-top:0;">🏆 HALL OF FAME 🏆</h2>
+                <div class="pixel-divider"></div>
+                <ul id="achievements-list" style="list-style:none; padding:0; font-size:1.6rem; line-height:2.2; color:#333;"></ul>
+                <div style="text-align:center; margin-top: 20px;">
+                    <button id="btn-close-achievements" class="btn-green">CLOSE</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="achievement-toast" class="achievement-toast hidden">
+            <div class="ach-icon">🏆</div>
+            <div class="ach-text">
+                <div class="ach-title">ACHIEVEMENT UNLOCKED!</div>
+                <div class="ach-desc" id="ach-desc-text">--</div>
+            </div>
+        </div>
+
+        <div id="chief-warning-toast" class="achievement-toast hidden" style="border-color: #f44336; z-index: 9999;">
+            <div class="ach-icon">😠</div>
+            <div class="ach-text">
+                <div class="ach-title" style="color: #f44336;" id="chief-warning-title">CHIEF DOCTOR:</div>
+                <div class="ach-desc" id="chief-warning-text">--</div>
+            </div>
+        </div>
+
+        <div id="case-select-modal" class="modal hidden" style="z-index: 12;">
+            <div class="intro-paper" style="width: 700px; background: #e0e0e0;">
+                <h2 id="ui-case-title" style="margin-top:0;">📂 SELECT PATIENT CASE</h2>
+                <div class="pixel-divider"></div>
+                <div class="case-grid-layout">
+                    <button class="case-folder" data-difficulty="easy">
+                        <div class="folder-tab">CASE 01</div>
+                        <div class="folder-body">
+                            <h3 id="ui-case-easy">BEGINNER</h3>
+                            <p id="ui-desc-easy"></p>
+                            <span class="budget-badge">💰 80 Coins</span>
+                        </div>
+                    </button>
+                    <button class="case-folder" data-difficulty="normal">
+                        <div class="folder-tab" style="background:#ff9800;">CASE 02</div>
+                        <div class="folder-body" style="border-color:#ff9800;">
+                            <h3 id="ui-case-normal" style="color:#ff9800;">INTERMEDIATE</h3>
+                            <p id="ui-desc-normal"></p>
+                            <span class="budget-badge">💰 50 Coins</span>
+                        </div>
+                    </button>
+                    <button class="case-folder" data-difficulty="hard">
+                        <div class="folder-tab" style="background:#f44336;">CASE 03</div>
+                        <div class="folder-body" style="border-color:#f44336;">
+                            <h3 id="ui-case-hard" style="color:#f44336;">ADVANCED</h3>
+                            <p id="ui-desc-hard"></p>
+                            <span class="budget-badge">💰 30 Coins</span>
+                        </div>
+                    </button>
+                </div>
+                <div style="text-align:center; margin-top: 25px;">
+                    <button id="btn-back-from-case" class="btn-start-style" style="font-size: 1.6rem; padding: 8px 20px; background: #ffe0b2; color: #d84315; border-color: #d84315; box-shadow: 0 5px 0 #bf360c;">
+                        <span id="ui-back-case">🏠 MAIN MENU</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="intro-modal" class="modal hidden">
+            <div class="intro-paper">
+                <h2 id="intro-title" style="margin-top:0;">📋 DOCTOR'S BRIEFING</h2>
+                <div class="pixel-divider"></div>
+                <div class="intro-text"></div>
+                <button id="btn-start-shift" class="btn-green">
+                    <span id="ui-start">OPEN CLINIC</span>
+                </button>
+            </div>
+        </div>
+
+        <div id="cutscene-modal" class="modal hidden" style="z-index: 15;">
+            <div class="rpg-dialogue-box">
+                <div class="speaker-name" id="speaker-name"></div>
+                <div class="typewriter-text" id="cutscene-text"></div>
+                <div class="blink-cursor" id="ui-click-cont">▼ Click to continue</div>
+            </div>
+        </div>
+
+        <div id="action-loading" class="hidden" style="position: absolute; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index: 8; display:flex; justify-content:center; align-items:center;">
+            <div style="background:#2c1e14; border: 4px solid #8d6e63; padding: 20px; text-align:center; color:#4fc3f7; font-size:2rem; box-shadow: 0 0 20px #000;">
+                <div id="loading-text">ANALYZING...</div>
+                <div class="loading-bar-container" style="width: 200px; height: 20px; border: 2px solid #555; margin-top:10px; background:#000; position:relative;">
+                    <div id="loading-bar-fill" style="width: 0%; height: 100%; background: #4fc3f7;"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="image-result-modal" class="modal hidden" style="z-index: 16;">
+            <div class="lightbox-panel">
+                <div class="lightbox-header">
+                    <h3 id="image-result-title">RESULT</h3>
+                    <div class="lightbox-clip"></div>
+                </div>
+                <div class="lightbox-screen" id="lightbox-screen">
+                    <div id="css-xray-view" class="hidden">
+                        <div class="xray-monitor">
+                            <div class="xray-grid"></div>
+                            <div id="lung-left" class="lung"></div>
+                            <div id="lung-right" class="lung"></div>
+                            <div class="spine"></div>
+                            <div class="ribcage">
+                                <div class="rib left-rib" style="top: 20%; width: 45px;"></div>
+                                <div class="rib right-rib" style="top: 20%; width: 45px;"></div>
+                                <div class="rib left-rib" style="top: 40%; width: 60px;"></div>
+                                <div class="rib right-rib" style="top: 40%; width: 60px;"></div>
+                                <div class="rib left-rib" style="top: 60%; width: 55px;"></div>
+                                <div class="rib right-rib" style="top: 60%; width: 55px;"></div>
+                                <div class="rib left-rib" style="top: 80%; width: 40px;"></div>
+                                <div class="rib right-rib" style="top: 80%; width: 40px;"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="css-blood-view" class="hidden">
+                        <div id="blood-status-label" style="position:absolute; top:10px; left:10px; background:rgba(0,0,0,0.8); color:#fff; padding:5px 10px; border:2px solid #fff; z-index:10; font-size:1.2rem; border-radius:4px;">
+                            STATUS: Normal
+                        </div>
+                        <div class="microscope">
+                            <div class="rbc" style="top:20%; left:20%; animation-delay: 0s;"></div>
+                            <div class="rbc" style="top:60%; left:70%; animation-delay: 0.5s;"></div>
+                            <div class="rbc" style="top:40%; left:40%; animation-delay: 1s;"></div>
+                            <div class="rbc" style="top:75%; left:30%; animation-delay: 1.5s;"></div>
+                            <div class="wbc" style="top:25%; left:60%; animation-delay: 0.2s;"></div>
+                            <div class="virus hidden" style="top:50%; left:25%; animation-delay: 0.3s;"></div>
+                            <div class="virus hidden" style="top:30%; left:50%; animation-delay: 0.7s;"></div>
+                        </div>
+                    </div>
+                    <div id="css-temp-view" class="hidden">
+                        <div style="display:flex; gap: 20px; align-items:center; width: 100%; justify-content: center;">
+                            <div class="thermal-scale">
+                                <span style="color:#ff5252;">40°C</span>
+                                <div class="scale-bar"></div>
+                                <span style="color:#40c4ff;">35°C</span>
+                            </div>
+                            <div class="thermal-monitor">
+                                <div id="thermal-digital-display" class="thermal-hud-text">36.5°C</div>
+                                <div id="thermal-body" class="thermal-silhouette">
+                                    <div class="t-head"></div>
+                                    <div class="t-torso"></div>
+                                    <div class="t-arms"></div>
+                                    <div class="t-legs"></div>
+                                </div>
+                                <div class="scan-line" style="background: linear-gradient(to bottom, transparent, rgba(255,255,255,0.2), transparent);"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="css-bp-view" class="hidden">
+                        <div class="bp-monitor-layout">
+                            <div class="bp-device crt-monitor">
+                                <div class="bp-screen">
+                                    <div class="bp-sys-section">
+                                        <div class="bp-lbl">SYS</div>
+                                        <div id="bp-sys-val" class="bp-val">120</div>
+                                        <div class="bp-unit">mmHg</div>
+                                    </div>
+                                    <div class="bp-divider"></div>
+                                    <div class="bp-dia-section">
+                                        <div class="bp-lbl">DIA</div>
+                                        <div id="bp-dia-val" class="bp-val">80</div>
+                                        <div class="bp-unit">mmHg</div>
+                                    </div>
+                                    <div class="bp-divider"></div>
+                                    <div class="bp-pulse-section">
+                                        <div class="bp-lbl">PULSE</div>
+                                        <div id="bp-pulse-val" class="bp-val">72</div>
+                                        <div class="bp-pulse-heart">❤️</div>
+                                    </div>
+                                </div>
+                                <div class="bp-device-label">SPHYGMOMANOMETER</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="css-glucose-view" class="hidden">
+                        <div class="glucose-monitor-layout">
+                            <div class="glucose-device crt-monitor">
+                                <div class="glucose-screen">
+                                    <div class="glucose-header-row">
+                                        <span>GLUCOSE</span>
+                                        <span class="glucose-battery">🔋 OK</span>
+                                    </div>
+                                    <div class="glucose-main-value">
+                                        <span id="glucose-num-val">105</span>
+                                        <span class="glucose-unit">mg/dL</span>
+                                    </div>
+                                    <div class="glucose-status-bar" id="glucose-status-text">NORMAL</div>
+                                </div>
+                                <div class="glucose-strip">
+                                    <div class="strip-blood"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="scan-glare"></div>
+                </div>
+                <button id="btn-close-image" class="btn-start-style" style="font-size: 2rem; padding: 10px 30px; margin-top: 15px;">
+                    CLOSE
+                </button>
+            </div>
+        </div>
+
+        <audio id="sfx-click" src="assets/sounds/click.mp3"></audio>
+        <audio id="sfx-type" src="assets/sounds/type.mp3"></audio>
+        <audio id="sfx-scan" src="assets/sounds/medbay-scan.mp3"></audio>
+        <audio id="sfx-success" src="assets/sounds/success.mp3"></audio>
+        <audio id="sfx-fail" src="assets/sounds/fail.mp3"></audio>
+
+        <div id="game-ui" class="game-ui hidden">
+            <div class="hud-top">
+                <div class="hud-box timer-box">
+                    <span id="ui-time"><span class="hud-clock-tick">⏱️</span> TIME:</span> 
+                    <span id="timer">0</span>
+                    <span id="ui-sec">s</span>
+                </div>
+                <div class="hud-box health-box" style="border-color: #ff5252; color: #ff5252;">
+                    <span id="ui-stability"><span class="hud-heart-pulse">❤️</span> HP:</span>
+                    <div class="health-bar-bg" style="width: 120px; height: 18px; border: 2px solid #ff5252; background: #222; position: relative;">
+                        <div id="health-bar-fill" style="width: 100%; height: 100%; background: #ff5252; transition: width 0.5s ease, background-color 0.5s ease;"></div>
+                    </div>
+                    <span id="health-text" style="font-size: 1.4rem;">100%</span>
+                </div>
+                <div class="hud-box coin-box">
+                    <span id="ui-budget"><span class="hud-coin-glint">🪙</span> BUDGET:</span> 
+                    <span id="coin-count">50</span>
+                </div>
+            </div>
+
+            <div class="middle-display">
+                <div class="info-board pixel-panel crt-monitor">
+                    <h3 id="ui-board-title">📄 PATIENT INFO</h3>
+                    <div class="board-line"><span id="ui-board-name">Name:</span> <span id="b-name">--</span></div>
+                    <div class="board-line"><span id="ui-board-age">Age:</span> <span id="b-age">--</span></div>
+                    <div class="board-line"><span id="ui-board-occ">Occ:</span> <span id="b-occ">--</span></div>
+                    <div class="board-line"><span id="ui-board-cond">Cond:</span> <span id="b-cond">--</span></div>
+                    <div class="board-line"><span id="ui-board-allergy">Allergy:</span> <span id="b-allergy">--</span></div>
+                    <div class="board-line">
+                        <span id="ui-board-symp">Symptoms:</span> <br>
+                        <span id="b-symp" style="color:#ffb74d;">--</span>
+                    </div>
+                </div>
+                <div class="lab-board pixel-panel crt-monitor">
+                    <h3 id="ui-board-lab">🗂️ LAB RESULTS</h3>
+                    <div class="ecg-monitor">
+                        <div class="ecg-line ecg-normal"></div>
+                    </div>
+                    <div style="display:flex; flex-direction:column; gap:6px;">
+                        <button id="btn-view-temp" class="lab-view-btn hidden"><span id="ui-view-temp">🌡️ View Temp</span></button>
+                        <button id="btn-view-bp" class="lab-view-btn hidden"><span id="ui-view-bp">🩺 View BP</span></button>
+                        <button id="btn-view-xray" class="lab-view-btn hidden"><span id="ui-view-xray">📄 View X-Ray</span></button>
+                        <button id="btn-view-blood" class="lab-view-btn hidden"><span id="ui-view-blood">🔬 View Blood</span></button>
+                        <button id="btn-view-glucose" class="lab-view-btn hidden"><span id="ui-view-glucose">🧪 View Glucose</span></button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="control-panel">
+                <div class="mobile-row-1" style="display:contents;"> 
+                	<div class="monitor-section crt-monitor">
+                        <div class="monitor-screen">
+                            <img id="dashboard-patient-img" src="" alt="No Signal">
+                            <div class="scan-line"></div>
+                        </div>
+                        <div class="monitor-label" id="ui-livefeed">LIVE FEED</div>
+                    </div>
+                    <div class="log-section">
+                        <div class="dialogue-box" id="doctor-log">
+                            <div class="log-line system" id="ui-sys-wait">System: Waiting...</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="tools-section">
+                    <button class="action-btn" id="btn-ask" title="ซักประวัติ (Ask)">
+                        <span id="ui-ask">🗣️</span> <span class="cost">(-5)</span>
+                    </button>
+                    <button class="action-btn" id="btn-temp" title="วัดไข้ (Temp)">
+                        <span id="ui-temp">🌡️</span> <span class="cost">(-10)</span>
+                    </button>
+                    <button class="action-btn" id="btn-bp" title="วัดความดัน (BP Cuff)">
+                        <span id="ui-bp">🩺</span> <span class="cost">(-5)</span>
+                    </button>
+                    <button class="action-btn" id="btn-blood" title="ตรวจเลือด (Blood)">
+                        <span id="ui-blood">🩸</span> <span class="cost">(-15)</span>
+                    </button>
+                    <button class="action-btn" id="btn-glucose" title="เจาะน้ำตาล (Glucose Meter)">
+                        <span id="ui-glucose">🧪</span> <span class="cost">(-10)</span>
+                    </button>
+                    <button class="action-btn" id="btn-xray" title="เอกซเรย์ (X-Ray)">
+                        <span id="ui-xray">💀</span> <span class="cost">(-20)</span>
+                    </button>
+                    <button class="action-btn" id="btn-hint" title="ตำราแพทย์ (Handbook)">
+                        <span id="ui-hint">📖</span> <span class="cost">(+15s)</span>
+                    </button>
+                    <button class="action-btn" id="btn-consult" title="ปรึกษาเภสัชกร (Consult)">
+                        <span id="ui-consult">💊</span> <span class="cost">(-10)</span>
+                    </button>
+                    <button class="action-btn" id="btn-in-game-wiki" title="คลังข้อมูลยา (Drug Wiki)">
+                        <span id="ui-wiki">🧪</span> <span class="cost">(Free)</span>
+                    </button>
+                </div>
+                <div class="confirm-section">
+                    <select id="diagnosis-input" class="pixel-input">
+                        <option value="" id="opt-diag">-- DIAGNOSIS --</option>
+                        <option value="Common Cold" id="opt-cold">Common Cold</option>
+                        <option value="Influenza" id="opt-flu">Influenza (Flu)</option>
+                        <option value="Pneumonia" id="opt-pneu">Pneumonia</option>
+                        <option value="Hypertension" id="opt-hypertension">Hypertension</option>
+                        <option value="Diabetes" id="opt-diabetes">Diabetes</option>
+                        <option disabled>──────────</option>
+                        <option value="Stroke" id="opt-stroke">Stroke</option>
+                        <option value="Hypothermia" id="opt-hypo">Hypothermia</option>
+                    </select>
+                    <select id="treatment-input" class="pixel-input" style="margin-top: 4px;">
+                        <option value="" id="opt-treat">-- TREATMENT --</option>
+                        <option value="Chlorpheniramine" id="opt-cpm">Chlorpheniramine (CPM)</option>
+                        <option value="Loratadine" id="opt-loratadine">Loratadine</option>
+                        <option value="Ibuprofen" id="opt-ibuprofen">Ibuprofen</option>
+                        <option value="Paracetamol" id="opt-para">Paracetamol</option>
+                        <option value="Amoxicillin" id="opt-amoxi">Amoxicillin</option>
+                        <option value="Azithromycin" id="opt-azithro">Azithromycin</option>
+                        <option value="tPA" id="opt-tpa">tPA (Alteplase)</option>
+                        <option value="Aspirin" id="opt-aspirin">Aspirin</option>
+                        <option value="Warm IV Fluids" id="opt-warm">Warm IV Fluids</option>
+                        <option disabled>──────────</option>
+                        <option value="Amlodipine" id="opt-amlodipine">Amlodipine</option>
+                        <option value="Enalapril" id="opt-enalapril">Enalapril</option>
+                        <option value="Metformin" id="opt-metformin">Metformin</option>
+                        <option value="Insulin" id="opt-insulin">Insulin</option>
+                    </select>
+                    <button id="btn-submit" class="btn-submit">
+                        <span id="ui-submit">SUBMIT</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="lang-drawer" class="lang-drawer collapsed">
+            <button id="btn-lang-drawer-toggle" class="lang-drawer-toggle">🌐 ◀</button>
+            <button id="btn-lang-toggle-fixed" class="fixed-lang-btn">TH/EN</button>
+        </div>
+
+        <div id="dossier-modal" class="modal hidden">
+            <div class="clipboard-container">
+                <div class="clipboard-clip"></div>
+                <div class="paper-sheet" style="position: relative;">
+                    <div id="dossier-stamp-approved" class="dossier-stamp approved hidden-stamp">APPROVED</div>
+                    <div id="dossier-stamp-rejected" class="dossier-stamp rejected hidden-stamp">REJECTED</div>
+                    <div class="doc-header">
+                        <span class="doc-title" id="ui-doc-title">PATIENT LOG</span>
+                        <span class="doc-id" id="ui-doc-urg">URGENT</span>
+                    </div>
+                    <div class="doc-content">
+                        <div class="doc-left">
+                            <div class="polaroid-frame">
+                                <img id="patient-img" src="">
+                            </div>
+                        </div>
+                        <div class="doc-right">
+                            <div class="info-row">
+                                <span class="label" id="ui-name">NAME:</span>
+                                <span class="value" id="p-name">--</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="label" id="ui-age">AGE:</span> 
+                                <span class="value" id="p-age">--</span>
+                                <span class="label" style="margin-left:10px;" id="ui-gender">GENDER:</span> 
+                                <span class="value" id="p-gender">--</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="label" id="ui-pain">PAIN (1-10):</span> 
+                                <span class="value" id="p-pain" style="color:#c62828; font-size: 1.8rem;">--</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="label" id="ui-occupation">OCCUPATION:</span> 
+                                <span class="value" id="p-occupation">--</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="label" id="ui-condition">MEDICAL HISTORY:</span> 
+                                <span class="value" id="p-condition">--</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="label" id="ui-allergy">DRUG ALLERGY:</span> 
+                                <span class="value" id="p-allergy">--</span>
+                            </div>
+                            <div class="info-group">
+                                <div class="label" id="ui-symp">SYMPTOMS:</div>
+                                <div class="value highlight-text" id="p-symptoms">--</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="doc-actions">
+                        <button id="btn-reject" class="stamp-btn reject">
+                            <span id="ui-decline">❌ REJECT</span>
+                        </button>
+                        <button id="btn-accept" class="stamp-btn accept">
+                            <span id="ui-examine">✅ ACCEPT CASE</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="feedback-modal" class="modal hidden">
+            <div class="paper-sheet feedback-sheet">
+                <h2 id="fb-title">RESULT</h2>
+                <div id="fb-content" class="feedback-content"></div>
+                <div style="display: flex; justify-content: center; margin-top:20px; gap: 15px;">
+                    <button id="btn-back-from-feedback" class="btn-start-style" style="font-size: 1.6rem; padding: 10px 20px; background: #ffe0b2; color: #d84315; border-color: #d84315; box-shadow: 0 5px 0 #bf360c;">
+                        <span id="ui-back-feedback">🏠 MAIN MENU</span>
+                    </button>
+                    <button id="btn-restart" class="btn-green" style="font-size: 1.6rem; box-shadow: 0 5px 0 #003300;">
+                        <span id="ui-next">BACK TO CASE FILES</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="drug-library-modal" class="modal hidden" style="z-index: 120;">
+            <div class="intro-paper" style="width: 600px; text-align: left; max-height: 80vh; display: flex; flex-direction: column;">
+                <h2 style="text-align:center; color:#00796b; margin-top:0;" id="wiki-title">📖 DRUG LIBRARY</h2>
+                <div class="pixel-divider" style="margin: 10px 0;"></div>
+                <div id="drug-library-content" style="font-size:1.4rem; color:#333; line-height: 1.5; overflow-y: auto; flex: 1; padding-right: 5px;"></div>
+                <div class="pixel-divider" style="margin: 10px 0;"></div>
+                <div style="text-align:center; margin-top: 10px;">
+                    <button id="btn-close-drug-library" class="btn-green" style="background:#00796b; border-color:#004d40; font-size:1.6rem; padding: 8px 25px;">
+                        CLOSE
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="med-refs-modal" class="modal hidden" style="z-index: 130;">
+            <div class="intro-paper" style="width: 600px; text-align: left; max-height: 80vh; display: flex; flex-direction: column;">
+                <h2 style="text-align:center; color:#0d47a1; margin-top:0;" id="refs-title">📚 MEDICAL REFERENCES</h2>
+                <div class="pixel-divider" style="margin: 10px 0;"></div>
+                <div id="med-refs-content" style="font-size:1.35rem; color:#333; line-height: 1.5; overflow-y: auto; flex: 1; padding-right: 5px;"></div>
+                <div class="pixel-divider" style="margin: 10px 0;"></div>
+                <div style="text-align:center; margin-top: 10px;">
+                    <button id="btn-close-med-refs" class="btn-green" style="background:#0d47a1; border-color:#0b3c80; font-size:1.6rem; padding: 8px 25px;">
+                        CLOSE
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script type="module" src="js/main.js"></script>
+</body>
+</html>
